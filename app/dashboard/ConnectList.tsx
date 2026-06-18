@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Link2, Plus, ExternalLink, Activity, PowerOff, X } from "lucide-react";
+import { Link2, Plus, ExternalLink, Activity, PowerOff, X, Globe } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -9,6 +9,8 @@ export default function ConnectList({ connections, allApps, userId }: { connecti
   const [connectingId, setConnectingId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [isAppModalOpen, setIsAppModalOpen] = useState(false);
+  const [registeringApp, setRegisteringApp] = useState(false);
   const router = useRouter();
   const supabase = createClient();
   
@@ -18,6 +20,33 @@ export default function ConnectList({ connections, allApps, userId }: { connecti
     username: "",
     store_code: ""
   });
+
+  const [appFormData, setAppFormData] = useState({
+    name: "",
+    website: "https://",
+    app_code: ""
+  });
+
+  const handleRegisterApp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setRegisteringApp(true);
+    try {
+      const { error } = await supabase.from('apps').insert({
+        name: appFormData.name,
+        website: appFormData.website,
+        app_code: appFormData.app_code.toUpperCase()
+      });
+      if (error) throw error;
+      
+      setIsAppModalOpen(false);
+      setAppFormData({ name: "", website: "https://", app_code: "" });
+      router.refresh(); 
+    } catch (err: any) {
+      alert("Failed to register app: " + err.message);
+    } finally {
+      setRegisteringApp(false);
+    }
+  };
 
   const handleAddConnection = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,13 +111,22 @@ export default function ConnectList({ connections, allApps, userId }: { connecti
     <div>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">Your App Connections</h2>
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
-        >
-          <Plus className="w-5 h-5" />
-          Add Connection
-        </button>
+        <div className="flex gap-3">
+          <button 
+            onClick={() => setIsAppModalOpen(true)}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
+          >
+            <Globe className="w-5 h-5" />
+            Register App
+          </button>
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
+          >
+            <Plus className="w-5 h-5" />
+            Add Connection
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -230,6 +268,79 @@ export default function ConnectList({ connections, allApps, userId }: { connecti
                   className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
                 >
                   {adding ? "Saving..." : "Save Connection"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Register App Modal */}
+      {isAppModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-700">
+              <h3 className="font-semibold text-lg text-gray-900 dark:text-white">Register New App</h3>
+              <button onClick={() => setIsAppModalOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <form onSubmit={handleRegisterApp} className="p-5 space-y-4">
+              <div className="bg-yellow-50 dark:bg-yellow-900/30 p-3 rounded-lg text-sm text-yellow-800 dark:text-yellow-200 mb-4">
+                <strong>Note:</strong> After registering, you must configure a secret API Key for this app on your Vercel Dashboard (e.g. <code>[APP_CODE]_API_KEY</code>).
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">App Name</label>
+                <input 
+                  type="text" 
+                  required
+                  placeholder="e.g. PosSpa"
+                  value={appFormData.name}
+                  onChange={(e) => setAppFormData({...appFormData, name: e.target.value})}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Website URL</label>
+                <input 
+                  type="url" 
+                  required
+                  placeholder="https://posspa.dichvupro.com"
+                  value={appFormData.website}
+                  onChange={(e) => setAppFormData({...appFormData, website: e.target.value})}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">App Code (Uppercase)</label>
+                <input 
+                  type="text" 
+                  required
+                  placeholder="POSSPA"
+                  value={appFormData.app_code}
+                  onChange={(e) => setAppFormData({...appFormData, app_code: e.target.value.toUpperCase()})}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white uppercase"
+                />
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button 
+                  type="button" 
+                  onClick={() => setIsAppModalOpen(false)}
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white py-2 rounded-lg font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={registeringApp}
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
+                >
+                  {registeringApp ? "Saving..." : "Register App"}
                 </button>
               </div>
             </form>
