@@ -40,7 +40,7 @@ export default function ConnectList({ connections, allApps, userId }: { connecti
       
       setIsAppModalOpen(false);
       setAppFormData({ name: "", website: "https://", app_code: "" });
-      router.refresh(); 
+      window.location.reload(); 
     } catch (err: any) {
       alert("Failed to register app: " + err.message);
     } finally {
@@ -65,7 +65,7 @@ export default function ConnectList({ connections, allApps, userId }: { connecti
       
       setIsModalOpen(false);
       setFormData({ app_id: allApps[0]?.id || "", display_name: "", username: "", store_code: "" });
-      router.refresh();
+      window.location.reload();
     } catch (err: any) {
       alert("Failed to add connection: " + err.message);
     } finally {
