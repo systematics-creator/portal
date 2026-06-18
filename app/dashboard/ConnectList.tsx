@@ -1,10 +1,48 @@
 "use client";
 
 import { useState } from "react";
-import { Link2, Plus, ExternalLink, Activity, PowerOff } from "lucide-react";
+import { Link2, Plus, ExternalLink, Activity, PowerOff, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 export default function ConnectList({ connections, allApps, userId }: { connections: any[], allApps: any[], userId: string }) {
   const [connectingId, setConnectingId] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const router = useRouter();
+  const supabase = createClient();
+  
+  const [formData, setFormData] = useState({
+    app_id: allApps.length > 0 ? allApps[0].id : "",
+    display_name: "",
+    username: "",
+    store_code: ""
+  });
+
+  const handleAddConnection = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdding(true);
+    try {
+      const { error } = await supabase.from('user_connections').insert({
+        user_id: userId,
+        app_id: formData.app_id,
+        display_name: formData.display_name,
+        username: formData.username,
+        store_code: formData.store_code || null,
+        is_active: true,
+        connection_version: 1
+      });
+      if (error) throw error;
+      
+      setIsModalOpen(false);
+      setFormData({ app_id: allApps[0]?.id || "", display_name: "", username: "", store_code: "" });
+      router.refresh();
+    } catch (err: any) {
+      alert("Failed to add connection: " + err.message);
+    } finally {
+      setAdding(false);
+    }
+  };
 
   const handleConnect = async (conn: any) => {
     setConnectingId(conn.id);
@@ -44,7 +82,10 @@ export default function ConnectList({ connections, allApps, userId }: { connecti
     <div>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">Your App Connections</h2>
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors">
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
+        >
           <Plus className="w-5 h-5" />
           Add Connection
         </button>
@@ -114,6 +155,87 @@ export default function ConnectList({ connections, allApps, userId }: { connecti
           </div>
         ))}
       </div>
+
+      {/* Add Connection Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-700">
+              <h3 className="font-semibold text-lg text-gray-900 dark:text-white">Add New Connection</h3>
+              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <form onSubmit={handleAddConnection} className="p-5 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Select App</label>
+                <select 
+                  required
+                  value={formData.app_id}
+                  onChange={(e) => setFormData({...formData, app_id: e.target.value})}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                >
+                  {allApps.map(app => (
+                    <option key={app.id} value={app.id}>{app.name} ({app.app_code})</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Display Name (Optional)</label>
+                <input 
+                  type="text" 
+                  placeholder="e.g. Spa Branch 1"
+                  value={formData.display_name}
+                  onChange={(e) => setFormData({...formData, display_name: e.target.value})}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Username</label>
+                <input 
+                  type="text" 
+                  required
+                  placeholder="admin"
+                  value={formData.username}
+                  onChange={(e) => setFormData({...formData, username: e.target.value})}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Store Code (Optional)</label>
+                <input 
+                  type="text" 
+                  placeholder="SPA001"
+                  value={formData.store_code}
+                  onChange={(e) => setFormData({...formData, store_code: e.target.value})}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                />
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button 
+                  type="button" 
+                  onClick={() => setIsModalOpen(false)}
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white py-2 rounded-lg font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={adding}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
+                >
+                  {adding ? "Saving..." : "Save Connection"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
