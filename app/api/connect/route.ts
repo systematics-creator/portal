@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { NextResponse } from "next/navigation";
+import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 
 export async function POST(request: Request) {

@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/navigation';
+import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 
 // Ví dụ route xử lý POST /autologin tại App con (PosSpa, LogoAI, CRM...)
