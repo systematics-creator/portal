@@ -67,6 +67,9 @@ TO authenticated
 WITH CHECK (auth.uid() = user_id);
 
 -- Note: used_tokens table is deliberately omitted here.
+alter table apps enable row level security;
+create policy "Cho phép ai đã đăng nhập được xem danh sách app" on apps for select to authenticated using (true);
+create policy "Cho phép ai đã đăng nhập được thêm app mới" on apps for insert to authenticated with check (true);
 -- It should be created in the local database of each child app (PosSpa, LogoAI, CRM).
 /*
 -- Local App DB table for used_tokens
