@@ -15,7 +15,7 @@ export default function ConnectList({ connections, allApps, userId }: { connecti
   const supabase = createClient();
   
   const [formData, setFormData] = useState({
-    app_id: allApps.length > 0 ? allApps[0].id : "",
+    app_id: "",
     display_name: "",
     username: "",
     store_code: ""
@@ -214,6 +214,7 @@ export default function ConnectList({ connections, allApps, userId }: { connecti
                   onChange={(e) => setFormData({...formData, app_id: e.target.value})}
                   className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
+                  <option value="" disabled>-- Please select an App --</option>
                   {allApps.map(app => (
                     <option key={app.id} value={app.id}>{app.name} ({app.app_code})</option>
                   ))}
