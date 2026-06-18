@@ -39,7 +39,7 @@ export async function POST(request: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
-    const { data: connection, error } = await supabaseAdmin
+    const { data: connectionData, error } = await supabaseAdmin
       .from("user_connections")
       .select(`
         id,
@@ -53,6 +53,8 @@ export async function POST(request: Request) {
       `)
       .eq("id", connectionId)
       .single();
+
+    const connection: any = connectionData;
 
     if (error || !connection) {
       return NextResponse.json({ error: "Connection not found" }, { status: 404 });

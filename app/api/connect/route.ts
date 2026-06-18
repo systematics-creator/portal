@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     }
 
     // Lấy thông tin connection (Có RLS nên sẽ chỉ lấy được nếu user sở hữu)
-    const { data: connection, error: connError } = await supabase
+    const { data: connectionData, error: connError } = await supabase
       .from("user_connections")
       .select(`
         id,
@@ -31,6 +31,8 @@ export async function POST(request: Request) {
       `)
       .eq("id", connectionId)
       .single();
+
+    const connection: any = connectionData;
 
     if (connError || !connection) {
       return NextResponse.json({ error: "Connection not found" }, { status: 404 });
