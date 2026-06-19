@@ -11,19 +11,19 @@ export async function addConnection(data: any) {
 
     if (!user) return { error: "Unauthorized" }
 
-    const { error } = await supabase.from('user_connections').insert({
+    const response = await supabase.from('user_connections').insert({
       user_id: user.id,
       display_name: data.display_name,
       website: data.website,
       store_code: data.store_code || null,
       username: data.username,
       password_encrypted: encrypt(data.password)
-    })
+    }).select();
 
-    if (error) return { error: error.message }
+    if (response.error) return { error: response.error.message }
     
     revalidatePath('/dashboard')
-    return { success: true }
+    return { success: true, dbResponse: response }
   } catch (err: any) {
     return { error: err.message || "An unexpected error occurred" }
   }

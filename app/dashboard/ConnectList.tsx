@@ -60,6 +60,7 @@ export default function ConnectList({ connections }: { connections: any[] }) {
         showToast("Error saving app: " + res.error);
         console.error("Save error:", res.error);
       } else {
+        console.log("Save Success. Response:", res);
         setIsModalOpen(false);
         window.location.reload();
       }
