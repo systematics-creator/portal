@@ -58,12 +58,7 @@ export default async function DashboardPage() {
           </div>
         )}
         
-        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-400 rounded text-sm font-mono overflow-auto">
-          <strong>DEBUG INFO:</strong><br/>
-          User ID: {user.id}<br/>
-          Connections Count: {connections?.length || 0}<br/>
-          Raw Error: {JSON.stringify(error)}<br/>
-        </div>
+
 
         <ConnectList connections={connections || []} />
       </main>
