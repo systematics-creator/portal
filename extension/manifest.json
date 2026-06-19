@@ -17,17 +17,12 @@
     },
     {
       "matches": [
-        "https://*.dichvupro.net/*",
-        "https://*.dichvupro.com/*"
+        "<all_urls>"
       ],
       "js": ["config.js", "content-target.js"]
     }
   ],
   "host_permissions": [
-    "https://*.dichvupro.net/*",
-    "https://*.dichvupro.com/*",
-    "https://*.vercel.app/*",
-    "http://localhost:3000/*",
-    "http://localhost:3001/*"
+    "<all_urls>"
   ]
 }
