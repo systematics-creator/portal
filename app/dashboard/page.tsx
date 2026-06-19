@@ -18,22 +18,14 @@ export default async function DashboardPage() {
     .from("user_connections")
     .select(`
       id,
+      display_name,
+      website,
       store_code,
       username,
-      display_name,
-      is_active,
-      connection_version,
-      apps (
-        id,
-        name,
-        website,
-        app_code
-      )
+      created_at
     `)
-    .eq("user_id", user.id);
-
-  // Fetch all apps for the "Add Connection" modal (which we can implement in ConnectList)
-  const { data: allApps } = await supabase.from("apps").select("*");
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
@@ -57,7 +49,7 @@ export default async function DashboardPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-grow">
-        <ConnectList connections={connections || []} allApps={allApps || []} userId={user.id} />
+        <ConnectList connections={connections || []} />
       </main>
       
       <footer className="py-6 text-center text-sm text-gray-400 dark:text-gray-500">
