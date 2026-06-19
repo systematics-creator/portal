@@ -1,7 +1,7 @@
 // Runs on Portal domain
 window.addEventListener('message', (event) => {
-  // Verify origin matches our portal domains
-  if (event.origin !== 'https://portal-wine-omega-71.vercel.app' && event.origin !== 'http://localhost:3000') {
+  // Verify origin matches the current window origin (in case of different Vercel domains)
+  if (event.origin !== window.location.origin) {
     return;
   }
 

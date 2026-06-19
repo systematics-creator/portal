@@ -9,8 +9,9 @@
   "content_scripts": [
     {
       "matches": [
-        "https://portal-wine-omega-71.vercel.app/*",
-        "http://localhost:3000/*"
+        "https://*.vercel.app/*",
+        "http://localhost:3000/*",
+        "http://localhost:3001/*"
       ],
       "js": ["content-portal.js"]
     },
@@ -25,7 +26,8 @@
   "host_permissions": [
     "https://*.dichvupro.net/*",
     "https://*.dichvupro.com/*",
-    "https://portal-wine-omega-71.vercel.app/*",
-    "http://localhost:3000/*"
+    "https://*.vercel.app/*",
+    "http://localhost:3000/*",
+    "http://localhost:3001/*"
   ]
 }

@@ -16,16 +16,24 @@ function setNativeValue(element, value) {
   element.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
+let attempt = 0;
+const maxAttempts = 20; // Try for up to 10 seconds
+let retryInterval;
+
 function autoFillAndLogin() {
   chrome.storage.local.get(['portal_autologin'], (result) => {
     const creds = result.portal_autologin;
-    if (!creds) return; // No credentials pending
+    if (!creds) {
+      clearInterval(retryInterval);
+      return; // No credentials pending
+    }
 
     const hostname = window.location.hostname;
     const config = window.PORTAL_SITE_CONFIGS && window.PORTAL_SITE_CONFIGS[hostname];
     
     if (!config) {
       console.log("[Portal Extension] No configuration found for this domain:", hostname);
+      clearInterval(retryInterval);
       return;
     }
 
@@ -33,14 +41,14 @@ function autoFillAndLogin() {
     try {
       const targetUrl = new URL(creds.website);
       if (hostname !== targetUrl.hostname) {
+        clearInterval(retryInterval);
         return; // Credentials don't belong to this host
       }
     } catch (e) {
       console.error("[Portal Extension] Invalid credential website URL");
+      clearInterval(retryInterval);
       return;
     }
-
-    console.log("[Portal Extension] Initiating auto-fill for", hostname);
 
     let filled = false;
 
@@ -72,6 +80,7 @@ function autoFillAndLogin() {
     }
 
     if (filled && config.loginButtonSelector) {
+      clearInterval(retryInterval); // Stop retrying once filled
       setTimeout(() => {
         const loginBtn = document.querySelector(config.loginButtonSelector);
         if (loginBtn) {
@@ -86,14 +95,12 @@ function autoFillAndLogin() {
   });
 }
 
-// Try auto-fill when DOM is ready, and also after a short delay in case of SPAs
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(autoFillAndLogin, 500); // Wait for React to render
-  });
-} else {
-  setTimeout(autoFillAndLogin, 500);
-}
-
-// Additional backup for slow rendering SPAs
-setTimeout(autoFillAndLogin, 2000);
+// Try auto-fill using an interval to catch asynchronous React rendering
+retryInterval = setInterval(() => {
+  attempt++;
+  if (attempt >= maxAttempts) {
+    clearInterval(retryInterval);
+    return;
+  }
+  autoFillAndLogin();
+}, 500);
