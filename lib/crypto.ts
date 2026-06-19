@@ -6,10 +6,11 @@ const TAG_LENGTH = 16;
 
 function getKey() {
   const secret = process.env.PORTAL_ENCRYPTION_KEY || process.env.PORTAL_JWT_SECRET;
-  if (!secret || secret.length < 32) {
-    throw new Error('PORTAL_ENCRYPTION_KEY or PORTAL_JWT_SECRET must be at least 32 characters long.');
+  if (!secret) {
+    throw new Error('PORTAL_ENCRYPTION_KEY or PORTAL_JWT_SECRET must be set.');
   }
-  return Buffer.from(secret.substring(0, 32), 'utf8');
+  // Dùng SHA-256 để băm chuỗi bí mật (dù ngắn hay dài) thành đúng 32 byte chuẩn
+  return crypto.createHash('sha256').update(secret).digest();
 }
 
 export function encrypt(text: string): string {
