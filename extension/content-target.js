@@ -1,19 +1,16 @@
 // Runs on target domains (*.dichvupro.net, *.dichvupro.com)
 
 function setNativeValue(element, value) {
-  const valueSetter = Object.getOwnPropertyDescriptor(element, 'value').set;
-  const prototype = Object.getPrototypeOf(element);
-  const prototypeValueSetter = Object.getOwnPropertyDescriptor(prototype, 'value').set;
-  
-  if (valueSetter && valueSetter !== prototypeValueSetter) {
-    prototypeValueSetter.call(element, value);
-  } else {
-    valueSetter.call(element, value);
+  try {
+    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+    nativeInputValueSetter.call(element, value);
+    element.dispatchEvent(new Event('input', { bubbles: true }));
+    element.dispatchEvent(new Event('change', { bubbles: true }));
+  } catch (e) {
+    console.error("[Portal Extension] Fallback setNativeValue used", e);
+    element.value = value;
+    element.dispatchEvent(new Event('input', { bubbles: true }));
   }
-  
-  // Trigger events for React/Vue
-  element.dispatchEvent(new Event('input', { bubbles: true }));
-  element.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
 let attempt = 0;
