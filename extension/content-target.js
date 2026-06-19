@@ -40,9 +40,12 @@ function autoFillAndLogin() {
     }
 
     if (!config) {
-      console.log("[Portal Extension] No configuration found for this domain:", hostname);
-      clearInterval(retryInterval);
-      return;
+      console.log("[Portal Extension] No configuration found for this domain:", hostname, ". Using fallback generic selectors.");
+      config = {
+        usernameSelector: "input[type='text'], input[type='email'], input[name='username'], input[name='email']",
+        passwordSelector: "input[type='password'], input[name='password']",
+        loginButtonSelector: "button[type='submit'], input[type='submit'], button"
+      };
     }
 
     let filled = false;
