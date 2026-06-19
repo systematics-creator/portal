@@ -60,6 +60,7 @@ export default function ConnectList({ connections }: { connections: any[] }) {
         alert("Error saving app: " + res.error);
       } else {
         setIsModalOpen(false);
+        window.location.reload();
       }
     } catch (err: any) {
       alert("Error saving app: " + err.message);
@@ -72,7 +73,11 @@ export default function ConnectList({ connections }: { connections: any[] }) {
     if (!confirm("Are you sure you want to delete this connection?")) return;
     try {
       const res = await deleteConnection(id);
-      if (res.error) alert("Error deleting connection: " + res.error);
+      if (res.error) {
+        alert("Error deleting connection: " + res.error);
+      } else {
+        window.location.reload();
+      }
     } catch (err: any) {
       alert("Error deleting connection: " + err.message);
     }
