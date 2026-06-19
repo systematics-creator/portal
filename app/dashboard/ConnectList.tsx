@@ -49,14 +49,20 @@ export default function ConnectList({ connections }: { connections: any[] }) {
     e.preventDefault();
     setLoading(true);
     try {
+      let res;
       if (editingId) {
-        await updateConnection(editingId, formData);
+        res = await updateConnection(editingId, formData);
       } else {
-        await addConnection(formData);
+        res = await addConnection(formData);
       }
-      setIsModalOpen(false);
+      
+      if (res.error) {
+        alert("Error saving app: " + res.error);
+      } else {
+        setIsModalOpen(false);
+      }
     } catch (err: any) {
-      alert("Error saving connection: " + err.message);
+      alert("Error saving app: " + err.message);
     } finally {
       setLoading(false);
     }
@@ -65,7 +71,8 @@ export default function ConnectList({ connections }: { connections: any[] }) {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this connection?")) return;
     try {
-      await deleteConnection(id);
+      const res = await deleteConnection(id);
+      if (res.error) alert("Error deleting connection: " + res.error);
     } catch (err: any) {
       alert("Error deleting connection: " + err.message);
     }
@@ -77,9 +84,13 @@ export default function ConnectList({ connections }: { connections: any[] }) {
 
     // 2. Fetch password and show modal
     try {
-      const pass = await getConnectionPassword(conn.id);
+      const res = await getConnectionPassword(conn.id);
+      if (res.error) {
+        alert("Lỗi khi lấy mật khẩu: " + res.error);
+        return;
+      }
       setActiveConnection(conn);
-      setDecryptedPassword(pass);
+      setDecryptedPassword(res.data!);
       setShowPassword(false);
       setIsCredsModalOpen(true);
       showToast("Thông tin đăng nhập đã sẵn sàng");
