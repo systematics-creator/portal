@@ -10,6 +10,12 @@ const siteConfigs = {
     usernameSelector: "input[name='username']",
     passwordSelector: "input[type='password']",
     loginButtonSelector: "button[type='submit']"
+  },
+  "app.dichvupro.net": {
+    storeSelector: "input[name='store_code'], input[name='tenant'], input[type='text']",
+    usernameSelector: "input[type='email'], input[name='email'], input[name='username']",
+    passwordSelector: "input[type='password']",
+    loginButtonSelector: "button[type='submit']"
   }
 };
 
