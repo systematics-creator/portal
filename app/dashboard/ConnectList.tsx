@@ -57,13 +57,15 @@ export default function ConnectList({ connections }: { connections: any[] }) {
       }
       
       if (res.error) {
-        alert("Error saving app: " + res.error);
+        showToast("Error saving app: " + res.error);
+        console.error("Save error:", res.error);
       } else {
         setIsModalOpen(false);
         window.location.reload();
       }
     } catch (err: any) {
-      alert("Error saving app: " + err.message);
+      showToast("Error saving app: " + err.message);
+      console.error("Save exception:", err);
     } finally {
       setLoading(false);
     }
@@ -74,12 +76,12 @@ export default function ConnectList({ connections }: { connections: any[] }) {
     try {
       const res = await deleteConnection(id);
       if (res.error) {
-        alert("Error deleting connection: " + res.error);
+        showToast("Error deleting connection: " + res.error);
       } else {
         window.location.reload();
       }
     } catch (err: any) {
-      alert("Error deleting connection: " + err.message);
+      showToast("Error deleting connection: " + err.message);
     }
   };
 
@@ -91,7 +93,7 @@ export default function ConnectList({ connections }: { connections: any[] }) {
     try {
       const res = await getConnectionPassword(conn.id);
       if (res.error) {
-        alert("Lỗi khi lấy mật khẩu: " + res.error);
+        showToast("Lỗi khi lấy mật khẩu: " + res.error);
         return;
       }
       setActiveConnection(conn);
@@ -100,7 +102,7 @@ export default function ConnectList({ connections }: { connections: any[] }) {
       setIsCredsModalOpen(true);
       showToast("Thông tin đăng nhập đã sẵn sàng");
     } catch (err: any) {
-      alert("Lỗi khi lấy mật khẩu: " + err.message);
+      showToast("Lỗi khi lấy mật khẩu: " + err.message);
     }
   };
 
