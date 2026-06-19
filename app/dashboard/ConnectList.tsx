@@ -87,21 +87,34 @@ export default function ConnectList({ connections }: { connections: any[] }) {
   };
 
   const handleConnect = async (conn: any) => {
-    // 1. Open website in new tab immediately
-    window.open(conn.website, "_blank");
-
-    // 2. Fetch password and show modal
     try {
+      // 1. Fetch password first
       const res = await getConnectionPassword(conn.id);
       if (res.error) {
         showToast("Lỗi khi lấy mật khẩu: " + res.error);
         return;
       }
+
+      // 2. Send message to Chrome Extension (content-portal.js will pick this up)
+      window.postMessage({
+        type: 'PORTAL_AUTO_LOGIN',
+        data: {
+          website: conn.website,
+          store_code: conn.store_code,
+          username: conn.username,
+          password: res.data
+        }
+      }, '*');
+
+      // 3. Open website in new tab
+      window.open(conn.website, "_blank");
+
+      // 4. Update UI fallback
       setActiveConnection(conn);
       setDecryptedPassword(res.data!);
       setShowPassword(false);
       setIsCredsModalOpen(true);
-      showToast("Thông tin đăng nhập đã sẵn sàng");
+      showToast("Đã gửi thông tin cho Extension tự động điền!");
     } catch (err: any) {
       showToast("Lỗi khi lấy mật khẩu: " + err.message);
     }
