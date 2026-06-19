@@ -1,8 +1,8 @@
 const siteConfigs = {
   // Configs are mapped by hostname
   "posspa.dichvupro.net": {
-    storeSelector: "input[name='store_code']",
-    usernameSelector: "input[name='username']",
+    storeSelector: "input[placeholder='ABC123']",
+    usernameSelector: "input[placeholder='lan.tran']",
     passwordSelector: "input[type='password']",
     loginButtonSelector: "button[type='submit']"
   },
