@@ -13,6 +13,13 @@ export default function ConnectList({ connections }: { connections: any[] }) {
   const [decryptedPassword, setDecryptedPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [activeAppId, setActiveAppId] = useState<string | null>(null);
+
+  import { useEffect } from "react";
+  useEffect(() => {
+    const saved = localStorage.getItem("portal_active_app");
+    if (saved) setActiveAppId(saved);
+  }, []);
 
   const [formData, setFormData] = useState({
     display_name: "",
@@ -95,7 +102,7 @@ export default function ConnectList({ connections }: { connections: any[] }) {
         return;
       }
 
-      // 2. Send message to Chrome Extension (content-portal.js will pick this up)
+      // 2. Send message to Chrome Extension
       window.postMessage({
         type: 'PORTAL_AUTO_LOGIN',
         data: {
@@ -106,15 +113,30 @@ export default function ConnectList({ connections }: { connections: any[] }) {
         }
       }, '*');
 
-      // 3. Open website in new tab
-      window.open(conn.website, "_blank");
+      // 3. Mark as active
+      localStorage.setItem("portal_active_app", conn.id);
+      setActiveAppId(conn.id);
 
-      // 4. Update UI fallback
+      // 4. Open website in new tab
+      window.open(conn.website, "_blank");
+      
+      showToast("Đã mở ứng dụng và gửi lệnh tự động điền!");
+    } catch (err: any) {
+      showToast("Lỗi kết nối: " + err.message);
+    }
+  };
+
+  const handleViewCredentials = async (conn: any) => {
+    try {
+      const res = await getConnectionPassword(conn.id);
+      if (res.error) {
+        showToast("Lỗi khi lấy mật khẩu: " + res.error);
+        return;
+      }
       setActiveConnection(conn);
       setDecryptedPassword(res.data!);
       setShowPassword(false);
       setIsCredsModalOpen(true);
-      showToast("Đã gửi thông tin cho Extension tự động điền!");
     } catch (err: any) {
       showToast("Lỗi khi lấy mật khẩu: " + err.message);
     }
@@ -159,14 +181,17 @@ export default function ConnectList({ connections }: { connections: any[] }) {
           </div>
         )}
         
-        {connections.map((conn) => (
-          <div key={conn.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col transition-all hover:shadow-md">
-            <div className="p-5 border-b border-gray-100 dark:border-gray-700 flex justify-between items-start">
+        {connections.map((conn) => {
+          const isActive = activeAppId === conn.id;
+          return (
+            <div key={conn.id} className={`rounded-xl shadow-sm border overflow-hidden flex flex-col transition-all hover:shadow-md ${isActive ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-400 dark:border-emerald-500 ring-1 ring-emerald-400 dark:ring-emerald-500' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
+              <div className={`p-5 border-b flex justify-between items-start ${isActive ? 'border-emerald-100 dark:border-emerald-800' : 'border-gray-100 dark:border-gray-700'}`}>
               <div>
                 <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-1">{conn.display_name}</h3>
                 <a href={conn.website} target="_blank" rel="noreferrer" className="text-sm text-blue-500 hover:underline">{conn.website}</a>
               </div>
               <div className="flex gap-2">
+                {isActive && <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/40 px-2 py-1 rounded">Active</span>}
                 <button onClick={() => handleOpenEdit(conn)} className="text-gray-400 hover:text-blue-500 transition-colors" title="Edit">
                   <Edit className="w-4 h-4" />
                 </button>
@@ -189,7 +214,7 @@ export default function ConnectList({ connections }: { connections: any[] }) {
               )}
             </div>
 
-            <div className="p-4 flex gap-2 bg-gray-50/80 dark:bg-gray-800/80 border-t border-gray-100 dark:border-gray-700">
+            <div className={`p-4 flex gap-2 border-t ${isActive ? 'bg-emerald-100/50 dark:bg-emerald-900/30 border-emerald-100 dark:border-emerald-800' : 'bg-gray-50/80 dark:bg-gray-800/80 border-gray-100 dark:border-gray-700'}`}>
               <button
                 onClick={() => handleConnect(conn)}
                 className="flex-1 flex items-center justify-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100 py-2.5 rounded-lg font-medium transition-all shadow-sm"
@@ -198,15 +223,15 @@ export default function ConnectList({ connections }: { connections: any[] }) {
                 Connect
               </button>
               <button
-                onClick={() => handleConnect(conn)} // Open modal to copy without redirecting? Re-using connect for simplicity per requirement
-                className="flex items-center justify-center bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 px-4 rounded-lg transition-colors"
+                onClick={() => handleViewCredentials(conn)}
+                className={`flex items-center justify-center px-4 rounded-lg transition-colors ${isActive ? 'bg-emerald-200 dark:bg-emerald-800 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-300 dark:hover:bg-emerald-700' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600'}`}
                 title="View & Copy Credentials"
               >
                 <Copy className="w-5 h-5" />
               </button>
             </div>
           </div>
-        ))}
+        )})}
       </div>
 
       {/* Add/Edit Connection Modal */}
