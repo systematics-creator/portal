@@ -1,13 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import ConnectList from "./ConnectList";
-import { LogOut } from "lucide-react";
+import ConfigList from "./ConfigList";
+import { LogOut, ArrowLeft } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 export const fetchCache = "force-no-store";
 
-export default async function DashboardPage() {
+export default async function ConfigsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -15,37 +15,26 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  // Fetch connections
-  const { data: connections, error } = await supabase
-    .from("user_connections")
-    .select(`
-      id,
-      display_name,
-      website,
-      store_code,
-      username,
-      created_at
-    `)
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
-
-  // Fetch site configs
-  const { data: siteConfigs, error: configsError } = await supabase
+  // Fetch configs
+  const { data: configs, error } = await supabase
     .from("site_configs")
     .select('*')
-    .order("domain", { ascending: true });
+    .order("created_at", { ascending: false });
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
       <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
+             <a href="/dashboard" className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors">
+               <ArrowLeft className="w-5 h-5" />
+             </a>
              <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white font-bold">P</div>
-             <h1 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">SSO Portal</h1>
+             <h1 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">Site Configs</h1>
           </div>
           <div className="flex items-center gap-4">
-            <a href="/dashboard/configs" className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hidden sm:block">
-              Site Configs
+            <a href="/dashboard" className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hidden sm:block">
+              Apps
             </a>
             <span className="text-sm font-medium text-gray-500 dark:text-gray-400 hidden sm:block">{user.email}</span>
             <div className="h-6 w-px bg-gray-200 dark:bg-gray-700 hidden sm:block"></div>
@@ -60,14 +49,14 @@ export default async function DashboardPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-grow">
-        {(error || configsError) && (
+        {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6">
             <strong className="font-bold">Error fetching data: </strong>
-            <span className="block sm:inline">{error?.message || configsError?.message}</span>
+            <span className="block sm:inline">{error.message}</span>
           </div>
         )}
         
-        <ConnectList connections={connections || []} siteConfigs={siteConfigs || []} />
+        <ConfigList configs={configs || []} />
       </main>
       
       <footer className="py-6 text-center text-sm text-gray-400 dark:text-gray-500">

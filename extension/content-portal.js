@@ -1,20 +1,34 @@
-// Runs on Portal domain
-window.addEventListener('message', (event) => {
-  // Verify origin matches the current window origin (in case of different Vercel domains)
-  if (event.origin !== window.location.origin) {
-    return;
-  }
+// content-portal.js
+// This script runs only on the Portal website (defined in manifest.json matches)
 
-  // Check if it's our auto-login message
-  if (event.data && event.data.type === 'PORTAL_AUTO_LOGIN') {
-    const credentials = event.data.data;
-    console.log("[Portal Extension] Received credentials from Portal", credentials);
+// Lắng nghe Message từ trang React (Portal)
+window.addEventListener("message", function(event) {
+  // We only accept messages from ourselves
+  if (event.source !== window) return;
+
+  if (event.data && event.data.type === "PORTAL_AUTO_LOGIN") {
+    const payload = event.data.data;
     
-    // Store in extension local storage
-    chrome.storage.local.set({ portal_autologin: credentials }, () => {
-      console.log("[Portal Extension] Credentials saved to secure extension storage");
+    // Save to Chrome Storage for content-target.js to read
+    chrome.storage.local.set({ portal_autologin: payload }, function() {
+      console.log("[Portal Extension] Đã lưu payload vào Storage:", payload);
     });
   }
 });
 
-console.log("[Portal Extension] Content script loaded on Portal");
+// Lắng nghe thay đổi từ Storage (khi quá trình test có kết quả từ content-target)
+chrome.storage.onChanged.addListener((changes, namespace) => {
+  if (namespace === 'local' && changes.portal_test_result) {
+    const resultPayload = changes.portal_test_result.newValue;
+    if (resultPayload) {
+      // Gửi ngược về cho Portal React App
+      window.postMessage({
+        type: "PORTAL_TEST_RESULTS",
+        data: resultPayload
+      }, "*");
+
+      // Xoá result đi để không bị bắt sự kiện lặp lại
+      chrome.storage.local.remove(['portal_test_result']);
+    }
+  }
+});

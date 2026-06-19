@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Plus, ExternalLink, X, Copy, Eye, EyeOff, Edit, Trash2 } from "lucide-react";
 import { addConnection, updateConnection, deleteConnection, getConnectionPassword } from "@/app/actions/connections";
 
-export default function ConnectList({ connections }: { connections: any[] }) {
+export default function ConnectList({ connections, siteConfigs = [] }: { connections: any[], siteConfigs?: any[] }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCredsModalOpen, setIsCredsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -101,14 +101,53 @@ export default function ConnectList({ connections }: { connections: any[] }) {
         return;
       }
 
+      // Extract domain
+      let domain = "";
+      try {
+        domain = new URL(conn.website).hostname;
+      } catch (e) {
+        domain = conn.website;
+      }
+
+      const config = siteConfigs.find((c: any) => domain.includes(c.domain) && c.is_active !== false);
+
+      let selectors = {};
+      let autoSubmit = true;
+      let configVersion = 1;
+
+      if (config) {
+        selectors = {
+          store: config.store_selector,
+          username: config.username_selector,
+          password: config.password_selector,
+          login: config.login_button_selector
+        };
+        autoSubmit = config.auto_submit !== false;
+        configVersion = config.config_version || 1;
+      } else {
+        // Smart Fallback
+        selectors = {
+          store: "input[name*='store'], input[id*='store']",
+          username: "input[type='email'], input[name*='email'], input[id*='email'], input[name*='user'], input[id*='user']",
+          password: "input[type='password']",
+          login: "button[type='submit']"
+        };
+      }
+
       // 2. Send message to Chrome Extension
       window.postMessage({
         type: 'PORTAL_AUTO_LOGIN',
         data: {
+          action: "LOGIN",
           website: conn.website,
-          store_code: conn.store_code,
-          username: conn.username,
-          password: res.data
+          credentials: {
+            storeCode: conn.store_code,
+            username: conn.username,
+            password: res.data
+          },
+          selectors,
+          autoSubmit,
+          configVersion
         }
       }, '*');
 
