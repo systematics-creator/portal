@@ -14,7 +14,7 @@ export default async function DashboardPage() {
   }
 
   // Fetch connections
-  const { data: connections } = await supabase
+  const { data: connections, error } = await supabase
     .from("user_connections")
     .select(`
       id,
@@ -49,6 +49,12 @@ export default async function DashboardPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-grow">
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6">
+            <strong className="font-bold">Error fetching data: </strong>
+            <span className="block sm:inline">{error.message}</span>
+          </div>
+        )}
         <ConnectList connections={connections || []} />
       </main>
       
