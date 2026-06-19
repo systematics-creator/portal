@@ -26,23 +26,21 @@ function autoFillAndLogin() {
     }
 
     const hostname = window.location.hostname;
-    const config = window.PORTAL_SITE_CONFIGS && window.PORTAL_SITE_CONFIGS[hostname];
+    // We can iterate over configs or just use a generic approach, or fuzzy match
+    let config = window.PORTAL_SITE_CONFIGS && window.PORTAL_SITE_CONFIGS[hostname];
     
     if (!config) {
-      console.log("[Portal Extension] No configuration found for this domain:", hostname);
-      clearInterval(retryInterval);
-      return;
+      // Fallback fuzzy match for subdomains
+      for (let key in window.PORTAL_SITE_CONFIGS) {
+        if (hostname.includes(key)) {
+          config = window.PORTAL_SITE_CONFIGS[key];
+          break;
+        }
+      }
     }
 
-    // Check if we are on the correct website as intended
-    try {
-      const targetUrl = new URL(creds.website);
-      if (hostname !== targetUrl.hostname) {
-        clearInterval(retryInterval);
-        return; // Credentials don't belong to this host
-      }
-    } catch (e) {
-      console.error("[Portal Extension] Invalid credential website URL");
+    if (!config) {
+      console.log("[Portal Extension] No configuration found for this domain:", hostname);
       clearInterval(retryInterval);
       return;
     }
