@@ -183,53 +183,47 @@ export default function ConnectList({ connections }: { connections: any[] }) {
         {connections.map((conn) => {
           const isActive = activeAppId === conn.id;
           return (
-            <div key={conn.id} className={`rounded-xl shadow-sm border overflow-hidden flex flex-col transition-all hover:shadow-md ${isActive ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-400 dark:border-emerald-500 ring-1 ring-emerald-400 dark:ring-emerald-500' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
-              <div className={`p-5 border-b flex justify-between items-start ${isActive ? 'border-emerald-100 dark:border-emerald-800' : 'border-gray-100 dark:border-gray-700'}`}>
-              <div>
-                <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-1">{conn.display_name}</h3>
-                <a href={conn.website} target="_blank" rel="noreferrer" className="text-sm text-blue-500 hover:underline">{conn.website}</a>
-              </div>
-              <div className="flex gap-2">
-                {isActive && <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/40 px-2 py-1 rounded">Active</span>}
-                <button onClick={() => handleOpenEdit(conn)} className="text-gray-400 hover:text-blue-500 transition-colors" title="Edit">
-                  <Edit className="w-4 h-4" />
-                </button>
-                <button onClick={() => handleDelete(conn.id)} className="text-gray-400 hover:text-red-500 transition-colors" title="Delete">
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-            
-            <div className="p-5 flex-grow space-y-3">
-              <div className="flex justify-between items-center text-sm bg-gray-50 dark:bg-gray-800/50 p-2 rounded">
-                <span className="text-gray-500 dark:text-gray-400">Username:</span>
-                <span className="font-semibold text-gray-900 dark:text-white">{conn.username}</span>
-              </div>
-              {conn.store_code && (
-                <div className="flex justify-between items-center text-sm bg-gray-50 dark:bg-gray-800/50 p-2 rounded">
-                  <span className="text-gray-500 dark:text-gray-400">Store Code:</span>
-                  <span className="font-semibold text-gray-900 dark:text-white bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded text-xs">{conn.store_code}</span>
+            <div key={conn.id} className={`rounded-lg shadow-sm border flex flex-col transition-all hover:shadow-md ${isActive ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-400 dark:border-emerald-500 ring-1 ring-emerald-400 dark:ring-emerald-500' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
+              <div className={`p-3 border-b flex justify-between items-center ${isActive ? 'border-emerald-100 dark:border-emerald-800' : 'border-gray-100 dark:border-gray-700'}`}>
+                <div className="flex-1 min-w-0 pr-2">
+                  <h3 className="font-bold text-base text-gray-900 dark:text-white truncate" title={conn.display_name}>{conn.display_name}</h3>
                 </div>
-              )}
-            </div>
+                <div className="flex gap-1 items-center flex-shrink-0">
+                  {isActive && <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/40 px-1.5 py-0.5 rounded uppercase tracking-wider mr-1">Active</span>}
+                  <button onClick={() => handleOpenEdit(conn)} className="text-gray-400 hover:text-blue-500 transition-colors p-1" title="Edit">
+                    <Edit className="w-3.5 h-3.5" />
+                  </button>
+                  <button onClick={() => handleDelete(conn.id)} className="text-gray-400 hover:text-red-500 transition-colors p-1" title="Delete">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            
+              <div className="p-3 flex-grow flex flex-col justify-center gap-2">
+                <a href={conn.website} target="_blank" rel="noreferrer" className="text-xs text-blue-500 hover:underline truncate block" title={conn.website}>{conn.website}</a>
+                <div className="flex gap-2 text-xs overflow-hidden">
+                  <span className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded flex-shrink-0 truncate max-w-[50%]">👤 {conn.username}</span>
+                  {conn.store_code && <span className="bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded flex-shrink-0 truncate max-w-[50%]">🏠 {conn.store_code}</span>}
+                </div>
+              </div>
 
-            <div className={`p-4 flex gap-2 border-t ${isActive ? 'bg-emerald-100/50 dark:bg-emerald-900/30 border-emerald-100 dark:border-emerald-800' : 'bg-gray-50/80 dark:bg-gray-800/80 border-gray-100 dark:border-gray-700'}`}>
-              <button
-                onClick={() => handleConnect(conn)}
-                className="flex-1 flex items-center justify-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100 py-2.5 rounded-lg font-medium transition-all shadow-sm"
-              >
-                <ExternalLink className="w-5 h-5" />
-                Connect
-              </button>
-              <button
-                onClick={() => handleViewCredentials(conn)}
-                className={`flex items-center justify-center px-4 rounded-lg transition-colors ${isActive ? 'bg-emerald-200 dark:bg-emerald-800 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-300 dark:hover:bg-emerald-700' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600'}`}
-                title="View & Copy Credentials"
-              >
-                <Copy className="w-5 h-5" />
-              </button>
+              <div className={`p-2 flex gap-2 border-t ${isActive ? 'bg-emerald-100/50 dark:bg-emerald-900/30 border-emerald-100 dark:border-emerald-800' : 'bg-gray-50/80 dark:bg-gray-800/80 border-gray-100 dark:border-gray-700'}`}>
+                <button
+                  onClick={() => handleConnect(conn)}
+                  className="flex-1 flex items-center justify-center gap-1.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100 py-1.5 rounded-md font-medium text-sm transition-all shadow-sm"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Connect
+                </button>
+                <button
+                  onClick={() => handleViewCredentials(conn)}
+                  className={`flex items-center justify-center px-3 py-1.5 rounded-md transition-colors ${isActive ? 'bg-emerald-200 dark:bg-emerald-800 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-300 dark:hover:bg-emerald-700' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600'}`}
+                  title="View & Copy Credentials"
+                >
+                  <Copy className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-          </div>
         )})}
       </div>
 

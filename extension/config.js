@@ -7,7 +7,7 @@ const siteConfigs = {
     loginButtonSelector: "button[type='submit']"
   },
   "logo.dichvupro.net": {
-    usernameSelector: "input[name='username']",
+    usernameSelector: "input[type='email'], input[name='email'], input[name='username']",
     passwordSelector: "input[type='password']",
     loginButtonSelector: "button[type='submit']"
   },
