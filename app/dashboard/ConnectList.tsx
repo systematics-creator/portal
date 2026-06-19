@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, ExternalLink, X, Copy, Eye, EyeOff, Edit, Trash2 } from "lucide-react";
 import { addConnection, updateConnection, deleteConnection, getConnectionPassword } from "@/app/actions/connections";
 
@@ -15,7 +15,6 @@ export default function ConnectList({ connections }: { connections: any[] }) {
   const [toastMessage, setToastMessage] = useState("");
   const [activeAppId, setActiveAppId] = useState<string | null>(null);
 
-  import { useEffect } from "react";
   useEffect(() => {
     const saved = localStorage.getItem("portal_active_app");
     if (saved) setActiveAppId(saved);
