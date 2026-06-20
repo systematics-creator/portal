@@ -1,25 +1,22 @@
 // content-target.js
 
-function setNativeValue(element, value) {
+function setNativeValue(input, value) {
   try {
-    const valueSetter = Object.getOwnPropertyDescriptor(element, 'value')?.set;
-    const prototype = Object.getPrototypeOf(element);
-    const prototypeValueSetter = prototype ? Object.getOwnPropertyDescriptor(prototype, 'value')?.set : undefined;
-    
-    if (prototypeValueSetter && valueSetter !== prototypeValueSetter) {
-      prototypeValueSetter.call(element, value);
-    } else if (valueSetter) {
-      valueSetter.call(element, value);
-    } else {
-      element.value = value;
-    }
-    
-    element.dispatchEvent(new Event('input', { bubbles: true }));
-    // Removed 'change' event to match the flawless old extension behavior
+    const nativeSetter = Object.getOwnPropertyDescriptor(
+      window.HTMLInputElement.prototype,
+      'value'
+    ).set;
+
+    nativeSetter.call(input, value);
+
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    input.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
   } catch (e) {
     console.error("setNativeValue error", e);
-    element.value = value;
-    element.dispatchEvent(new Event('input', { bubbles: true }));
+    // Fallback if needed
+    input.value = value;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
   }
 }
 
@@ -60,24 +57,33 @@ function processPayload(payload) {
 
       if (action === "LOGIN") {
         const creds = payload.credentials;
+        const storeInput = selectors.store ? document.querySelector(selectors.store) : null;
 
-        if (selectors.store && creds.storeCode) {
-          const storeInput = document.querySelector(selectors.store);
-          if (storeInput) setNativeValue(storeInput, creds.storeCode);
+        console.log("=== AUTO LOGIN DEBUG ===");
+        console.log("Store Input Found", storeInput);
+        console.log("Username Input Found", usernameEl);
+        console.log("Password Input Found", passwordEl);
+
+        if (storeInput && creds.storeCode) {
+          setNativeValue(storeInput, creds.storeCode);
+          console.log("Store Value set to", storeInput.value);
         }
 
         if (usernameEl && creds.username) {
           setNativeValue(usernameEl, creds.username);
+          console.log("Username Value set to", usernameEl.value);
         }
 
         if (passwordEl && creds.password) {
           setNativeValue(passwordEl, creds.password);
+          console.log("Password Value set to", passwordEl.value);
         }
 
         if (payload.autoSubmit && selectors.login) {
           setTimeout(() => {
             const btn = document.querySelector(selectors.login);
             if (btn) {
+              console.log("Clicking Login Button", btn);
               btn.click();
             }
           }, 800);
