@@ -69,7 +69,7 @@ function processPayload(payload) {
                       background: #10b981; color: white; padding: 15px 30px; border-radius: 8px; 
                       font-weight: bold; font-family: sans-serif; z-index: 999999; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
             ✅ QUÉT THÀNH CÔNG! Đã tìm thấy các ô (Viền màu xanh).
-            <div style="font-size: 13px; font-weight: normal; margin-top: 5px;">Bạn hãy đóng trang này và quay lại Portal.</div>
+            <div style="font-size: 13px; font-weight: normal; margin-top: 5px;">Trang web sẽ tự động đóng sau 3 giây...</div>
           </div>
         `;
         document.body.appendChild(alertBox);
@@ -81,6 +81,9 @@ function processPayload(payload) {
           }
         }, () => {
           chrome.storage.local.remove(['portal_autologin']);
+          setTimeout(() => {
+            window.close();
+          }, 3000);
         });
         return;
       }
