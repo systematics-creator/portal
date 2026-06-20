@@ -20,79 +20,87 @@ function setNativeValue(element, value) {
 function processPayload(payload) {
   const action = payload.action; // "LOGIN" or "TEST"
   const selectors = payload.selectors;
+  
+  let attempts = 0;
+  const maxAttempts = 10; // Try for 5 seconds (10 * 500ms)
 
-  if (action === "TEST") {
-    const result = {
-      store: !!document.querySelector(selectors.store),
-      username: !!document.querySelector(selectors.username),
-      password: !!document.querySelector(selectors.password),
-      login: !!document.querySelector(selectors.login)
-    };
+  const checkInterval = setInterval(() => {
+    attempts++;
+    
+    // Check if key elements exist
+    const usernameEl = selectors.username ? document.querySelector(selectors.username) : null;
+    const passwordEl = selectors.password ? document.querySelector(selectors.password) : null;
+    
+    // If we found the primary inputs OR we ran out of attempts
+    if ((usernameEl && passwordEl) || attempts >= maxAttempts) {
+      clearInterval(checkInterval);
+      
+      if (action === "TEST") {
+        const result = {
+          store: selectors.store ? !!document.querySelector(selectors.store) : false,
+          username: !!usernameEl,
+          password: !!passwordEl,
+          login: selectors.login ? !!document.querySelector(selectors.login) : false
+        };
 
-    chrome.storage.local.set({
-      portal_test_result: {
-        configId: payload.configId,
-        result: result
+        chrome.storage.local.set({
+          portal_test_result: {
+            configId: payload.configId,
+            result: result
+          }
+        }, () => {
+          chrome.storage.local.remove(['portal_autologin']);
+        });
+        return;
       }
-    }, () => {
-      // Clear the test payload
-      chrome.storage.local.remove(['portal_autologin']);
-    });
-    return;
-  }
 
-  if (action === "LOGIN") {
-    const creds = payload.credentials;
+      if (action === "LOGIN") {
+        const creds = payload.credentials;
 
-    // Fill Store Code
-    if (selectors.store && creds.storeCode) {
-      const storeInput = document.querySelector(selectors.store);
-      if (storeInput) setNativeValue(storeInput, creds.storeCode);
-    }
-
-    // Fill Username
-    if (selectors.username && creds.username) {
-      const usernameInput = document.querySelector(selectors.username);
-      if (usernameInput) setNativeValue(usernameInput, creds.username);
-    }
-
-    // Fill Password
-    if (selectors.password && creds.password) {
-      const passwordInput = document.querySelector(selectors.password);
-      if (passwordInput) setNativeValue(passwordInput, creds.password);
-    }
-
-    // Click Login Button
-    if (payload.autoSubmit && selectors.login) {
-      // Wait a tiny bit for React state to sync after input events
-      setTimeout(() => {
-        const btn = document.querySelector(selectors.login);
-        if (btn) {
-          btn.click();
+        // Fill Store Code
+        if (selectors.store && creds.storeCode) {
+          const storeInput = document.querySelector(selectors.store);
+          if (storeInput) setNativeValue(storeInput, creds.storeCode);
         }
-      }, 300);
-    }
 
-    // Clear credentials for security
-    chrome.storage.local.remove(['portal_autologin']);
-  }
+        // Fill Username
+        if (usernameEl && creds.username) {
+          setNativeValue(usernameEl, creds.username);
+        }
+
+        // Fill Password
+        if (passwordEl && creds.password) {
+          setNativeValue(passwordEl, creds.password);
+        }
+
+        // Click Login Button
+        if (payload.autoSubmit && selectors.login) {
+          setTimeout(() => {
+            const btn = document.querySelector(selectors.login);
+            if (btn) {
+              btn.click();
+            }
+          }, 500);
+        }
+
+        chrome.storage.local.remove(['portal_autologin']);
+      }
+    }
+  }, 500);
 }
 
-// 1. Kiểm tra xem có lệnh chờ sẵn không
 chrome.storage.local.get(['portal_autologin'], function(result) {
   if (result.portal_autologin) {
-    // Chờ DOM tải xong
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(() => processPayload(result.portal_autologin), 500);
+        processPayload(result.portal_autologin);
       });
     } else {
-      setTimeout(() => processPayload(result.portal_autologin), 500);
+      processPayload(result.portal_autologin);
     }
   }
 });
 
-// 2. Lắng nghe nếu storage thay đổi trong lúc tab này đang mở
 chrome.storage.onChanged.addListener((changes, namespace) => {
   if (namespace === 'local' && changes.portal_autologin) {
     if (changes.portal_autologin.newValue) {
