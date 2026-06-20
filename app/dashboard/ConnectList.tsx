@@ -109,7 +109,15 @@ export default function ConnectList({ connections, siteConfigs = [] }: { connect
         domain = conn.website;
       }
 
-      const config = siteConfigs.find((c: any) => domain.includes(c.domain) && c.is_active !== false);
+      const config = siteConfigs.find((c: any) => {
+        if (c.is_active === false) return false;
+        let cDomain = c.domain;
+        try {
+          // If user accidentally put full URL or path in config
+          cDomain = new URL(c.domain.startsWith('http') ? c.domain : `https://${c.domain}`).hostname;
+        } catch (e) {}
+        return domain === cDomain || domain.includes(cDomain);
+      });
 
       let selectors = {};
       let autoSubmit = true;
