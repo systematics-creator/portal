@@ -37,12 +37,42 @@ function processPayload(payload) {
       clearInterval(checkInterval);
       
       if (action === "TEST") {
+        const storeEl = selectors.store ? document.querySelector(selectors.store) : null;
+        const loginEl = selectors.login ? document.querySelector(selectors.login) : null;
+
         const result = {
-          store: selectors.store ? !!document.querySelector(selectors.store) : false,
+          store: !!storeEl,
           username: !!usernameEl,
           password: !!passwordEl,
-          login: selectors.login ? !!document.querySelector(selectors.login) : false
+          login: !!loginEl
         };
+
+        // VISUAL FEEDBACK: Highlight the found elements!
+        const highlightElement = (el) => {
+          if (el) {
+            el.style.border = "3px solid #10b981";
+            el.style.backgroundColor = "#d1fae5";
+            el.style.boxShadow = "0 0 10px #10b981";
+            el.style.transition = "all 0.3s";
+          }
+        };
+
+        highlightElement(storeEl);
+        highlightElement(usernameEl);
+        highlightElement(passwordEl);
+        highlightElement(loginEl);
+        
+        // Show a floating alert on the screen
+        const alertBox = document.createElement("div");
+        alertBox.innerHTML = `
+          <div style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); 
+                      background: #10b981; color: white; padding: 15px 30px; border-radius: 8px; 
+                      font-weight: bold; font-family: sans-serif; z-index: 999999; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
+            ✅ QUÉT THÀNH CÔNG! Đã tìm thấy các ô (Viền màu xanh).
+            <div style="font-size: 13px; font-weight: normal; margin-top: 5px;">Bạn hãy đóng trang này và quay lại Portal.</div>
+          </div>
+        `;
+        document.body.appendChild(alertBox);
 
         chrome.storage.local.set({
           portal_test_result: {
