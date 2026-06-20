@@ -44,7 +44,7 @@ export default async function DashboardPage() {
              <h1 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">SSO Portal</h1>
           </div>
           <div className="flex items-center gap-4">
-            <a href="/dashboard/configs" className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hidden sm:block">
+            <a href="/dashboard/configs" className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
               Site Configs
             </a>
             <span className="text-sm font-medium text-gray-500 dark:text-gray-400 hidden sm:block">{user.email}</span>
