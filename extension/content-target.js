@@ -1,37 +1,41 @@
 // content-target.js
 
-// Function to simulate React onChange events
 function setNativeValue(element, value) {
-  if (!element) return;
-  const valueSetter = Object.getOwnPropertyDescriptor(element, 'value').set;
-  const prototype = Object.getPrototypeOf(element);
-  const prototypeValueSetter = Object.getOwnPropertyDescriptor(prototype, 'value').set;
-  
-  if (valueSetter && valueSetter !== prototypeValueSetter) {
-    prototypeValueSetter.call(element, value);
-  } else {
-    valueSetter.call(element, value);
+  try {
+    const valueSetter = Object.getOwnPropertyDescriptor(element, 'value')?.set;
+    const prototype = Object.getPrototypeOf(element);
+    const prototypeValueSetter = prototype ? Object.getOwnPropertyDescriptor(prototype, 'value')?.set : undefined;
+    
+    if (prototypeValueSetter && valueSetter !== prototypeValueSetter) {
+      prototypeValueSetter.call(element, value);
+    } else if (valueSetter) {
+      valueSetter.call(element, value);
+    } else {
+      element.value = value;
+    }
+    
+    element.dispatchEvent(new Event('input', { bubbles: true }));
+    // Removed 'change' event to match the flawless old extension behavior
+  } catch (e) {
+    console.error("setNativeValue error", e);
+    element.value = value;
+    element.dispatchEvent(new Event('input', { bubbles: true }));
   }
-  
-  element.dispatchEvent(new Event('input', { bubbles: true }));
-  element.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
 function processPayload(payload) {
-  const action = payload.action; // "LOGIN" or "TEST"
+  const action = payload.action;
   const selectors = payload.selectors;
   
   let attempts = 0;
-  const maxAttempts = 10; // Try for 5 seconds (10 * 500ms)
+  const maxAttempts = 15; // Try for 7.5 seconds (15 * 500ms)
 
   const checkInterval = setInterval(() => {
     attempts++;
     
-    // Check if key elements exist
     const usernameEl = selectors.username ? document.querySelector(selectors.username) : null;
     const passwordEl = selectors.password ? document.querySelector(selectors.password) : null;
     
-    // If we found the primary inputs OR we ran out of attempts
     if ((usernameEl && passwordEl) || attempts >= maxAttempts) {
       clearInterval(checkInterval);
       
@@ -57,30 +61,26 @@ function processPayload(payload) {
       if (action === "LOGIN") {
         const creds = payload.credentials;
 
-        // Fill Store Code
         if (selectors.store && creds.storeCode) {
           const storeInput = document.querySelector(selectors.store);
           if (storeInput) setNativeValue(storeInput, creds.storeCode);
         }
 
-        // Fill Username
         if (usernameEl && creds.username) {
           setNativeValue(usernameEl, creds.username);
         }
 
-        // Fill Password
         if (passwordEl && creds.password) {
           setNativeValue(passwordEl, creds.password);
         }
 
-        // Click Login Button
         if (payload.autoSubmit && selectors.login) {
           setTimeout(() => {
             const btn = document.querySelector(selectors.login);
             if (btn) {
               btn.click();
             }
-          }, 500);
+          }, 800);
         }
 
         chrome.storage.local.remove(['portal_autologin']);
