@@ -124,6 +124,7 @@ export default function ConnectList({ connections, siteConfigs = [] }: { connect
       let configVersion = 1;
 
       if (config) {
+        showToast("Đang dùng Bản đồ (Config) riêng: " + config.domain);
         selectors = {
           store: config.store_selector,
           username: config.username_selector,
@@ -134,6 +135,7 @@ export default function ConnectList({ connections, siteConfigs = [] }: { connect
         configVersion = config.config_version || 1;
       } else {
         // Smart Fallback
+        showToast("Không tìm thấy Config khớp với " + domain + ", đang dùng Fallback!");
         selectors = {
           store: "input[name*='store'], input[id*='store']",
           username: "input[type='email'], input[name*='email'], input[id*='email'], input[name*='user'], input[id*='user']",
