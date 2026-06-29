@@ -225,7 +225,9 @@ export default function ConnectList({ connections, siteConfigs = [] }: { connect
     const rotationState = savedRotation ? JSON.parse(savedRotation) : {};
 
     // For each domain, select the connection and open
-    for (const domain of Object.keys(groups)) {
+    const domains = Object.keys(groups);
+    for (let i = 0; i < domains.length; i++) {
+      const domain = domains[i];
       const conns = groups[domain];
       if (conns.length === 0) continue;
 
@@ -241,6 +243,11 @@ export default function ConnectList({ connections, siteConfigs = [] }: { connect
 
       // Increment rotation
       rotationState[domain] = (currentIndex + 1) % conns.length;
+
+      // Add a slight delay (1/3 second) between opening tabs
+      if (i < domains.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 333));
+      }
     }
 
     // Save state back
