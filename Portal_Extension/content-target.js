@@ -80,7 +80,7 @@ function processPayload(payload) {
             result: result
           }
         }, () => {
-          chrome.storage.local.remove(['portal_autologin']);
+          if (payload.storageKey) chrome.storage.local.remove([payload.storageKey]);
           setTimeout(() => {
             window.close();
           }, 3000);
@@ -122,28 +122,77 @@ function processPayload(payload) {
           }, 800);
         }
 
-        chrome.storage.local.remove(['portal_autologin']);
+        if (payload.storageKey) chrome.storage.local.remove([payload.storageKey]);
       }
     }
   }, 500);
 }
 
-chrome.storage.local.get(['portal_autologin'], function(result) {
-  if (result.portal_autologin) {
+function cleanupUrl() {
+  const url = new URL(window.location.href);
+  if (url.searchParams.has('portal_id')) {
+    url.searchParams.delete('portal_id');
+    window.history.replaceState({}, document.title, url.toString());
+  }
+}
+
+function init() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const portalId = urlParams.get("portal_id");
+  
+  if (!portalId) return;
+
+  const storageKey = `portal_autologin_${portalId}`;
+
+  const handlePayload = (payload) => {
+    if (!payload) return;
+
+    // Validate
+    if (payload.requestId !== portalId) return;
+    if (payload.expiresAt && Date.now() > payload.expiresAt) {
+      console.warn("[Portal Extension] Payload expired");
+      chrome.storage.local.remove([storageKey]);
+      return;
+    }
+    
+    // Domain matching
+    if (payload.domain) {
+      let currentDomain = window.location.hostname;
+      if (currentDomain !== payload.domain && !currentDomain.includes(payload.domain)) {
+        console.warn("[Portal Extension] Domain mismatch", currentDomain, payload.domain);
+        return;
+      }
+    }
+
+    payload.storageKey = storageKey;
+    
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => {
-        processPayload(result.portal_autologin);
+        processPayload(payload);
+        cleanupUrl();
       });
     } else {
-      processPayload(result.portal_autologin);
+      processPayload(payload);
+      cleanupUrl();
     }
-  }
-});
+  };
 
-chrome.storage.onChanged.addListener((changes, namespace) => {
-  if (namespace === 'local' && changes.portal_autologin) {
-    if (changes.portal_autologin.newValue) {
-      processPayload(changes.portal_autologin.newValue);
+  chrome.storage.local.get([storageKey], function(result) {
+    if (result[storageKey]) {
+      handlePayload(result[storageKey]);
+    } else {
+      // Maybe not written yet, wait for it
+      const listener = (changes, namespace) => {
+        if (namespace === 'local' && changes[storageKey]) {
+          if (changes[storageKey].newValue) {
+            handlePayload(changes[storageKey].newValue);
+            chrome.storage.onChanged.removeListener(listener);
+          }
+        }
+      };
+      chrome.storage.onChanged.addListener(listener);
     }
-  }
-});
+  });
+}
+
+init();

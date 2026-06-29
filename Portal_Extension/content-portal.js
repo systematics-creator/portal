@@ -9,9 +9,11 @@ window.addEventListener("message", function(event) {
   if (event.data && event.data.type === "PORTAL_AUTO_LOGIN") {
     const payload = event.data.data;
     
+    const storageKey = payload.requestId ? `portal_autologin_${payload.requestId}` : 'portal_autologin';
+    
     // Save to Chrome Storage for content-target.js to read
-    chrome.storage.local.set({ portal_autologin: payload }, function() {
-      console.log("[Portal Extension] Đã lưu payload vào Storage:", payload);
+    chrome.storage.local.set({ [storageKey]: payload }, function() {
+      console.log("[Portal Extension] Đã lưu payload vào Storage:", storageKey, payload);
     });
   }
 });

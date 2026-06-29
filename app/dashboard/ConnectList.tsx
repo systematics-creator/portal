@@ -144,11 +144,14 @@ export default function ConnectList({ connections, siteConfigs = [] }: { connect
         };
       }
 
-      // 2. Send message to Chrome Extension
+      // 2. Generate requestId and payload
+      const requestId = crypto.randomUUID();
       window.postMessage({
         type: 'PORTAL_AUTO_LOGIN',
         data: {
+          requestId,
           action: "LOGIN",
+          domain,
           website: conn.website,
           credentials: {
             storeCode: conn.store_code,
@@ -157,7 +160,8 @@ export default function ConnectList({ connections, siteConfigs = [] }: { connect
           },
           selectors,
           autoSubmit,
-          configVersion
+          configVersion,
+          expiresAt: Date.now() + 60000
         }
       }, '*');
 
@@ -165,8 +169,10 @@ export default function ConnectList({ connections, siteConfigs = [] }: { connect
       localStorage.setItem("portal_active_app", conn.id);
       setActiveAppId(conn.id);
 
-      // 4. Open website in new tab
-      window.open(conn.website, "_blank");
+      // 4. Open website in new tab with requestId
+      const targetUrl = new URL(conn.website);
+      targetUrl.searchParams.set('portal_id', requestId);
+      window.open(targetUrl.toString(), "_blank");
       
       showToast("Đã mở ứng dụng và gửi lệnh tự động điền!");
     } catch (err: any) {
