@@ -146,6 +146,17 @@ export default function ConnectList({ connections, siteConfigs = [] }: { connect
 
       // 2. Generate requestId and payload
       const requestId = crypto.randomUUID();
+      console.log("CONNECT START");
+      console.log("Website:", conn.website);
+      console.log("Generated RequestId:", requestId);
+      console.log("Storage Key:", `portal_autologin_${requestId}`);
+      console.log("Credentials:", {
+        storeCode: conn.store_code,
+        username: conn.username,
+        password: res.data
+      });
+      console.log("Selectors:", selectors);
+
       window.postMessage({
         type: 'PORTAL_AUTO_LOGIN',
         data: {
@@ -172,7 +183,9 @@ export default function ConnectList({ connections, siteConfigs = [] }: { connect
       // 4. Open website in new tab with requestId
       const targetUrl = new URL(conn.website);
       targetUrl.searchParams.set('portal_id', requestId);
-      window.open(targetUrl.toString(), "_blank");
+      const openUrl = targetUrl.toString();
+      console.log("Open URL:", openUrl);
+      window.open(openUrl, "_blank");
       
       showToast("Đã mở ứng dụng và gửi lệnh tự động điền!");
     } catch (err: any) {

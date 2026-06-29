@@ -80,7 +80,11 @@ function processPayload(payload) {
             result: result
           }
         }, () => {
-          if (payload.storageKey) chrome.storage.local.remove([payload.storageKey]);
+          if (payload.storageKey) {
+            console.log("REMOVE STORAGE:", payload.storageKey);
+            console.log("REMOVE TIME:", Date.now());
+            chrome.storage.local.remove([payload.storageKey]);
+          }
           setTimeout(() => {
             window.close();
           }, 3000);
@@ -98,19 +102,24 @@ function processPayload(payload) {
         console.log("Password Input Found", passwordEl);
 
         if (storeInput && creds.storeCode) {
+          console.log("FILL STORE:", creds.storeCode);
           setNativeValue(storeInput, creds.storeCode);
           console.log("Store Value set to", storeInput.value);
         }
 
         if (usernameEl && creds.username) {
+          console.log("FILL USERNAME:", creds.username);
           setNativeValue(usernameEl, creds.username);
           console.log("Username Value set to", usernameEl.value);
         }
 
         if (passwordEl && creds.password) {
+          console.log("FILL PASSWORD:", creds.password);
           setNativeValue(passwordEl, creds.password);
           console.log("Password Value set to", passwordEl.value);
         }
+        
+        console.log("AUTOFILL COMPLETE");
 
         if (payload.autoSubmit && selectors.login) {
           setTimeout(() => {
@@ -122,7 +131,11 @@ function processPayload(payload) {
           }, 800);
         }
 
-        if (payload.storageKey) chrome.storage.local.remove([payload.storageKey]);
+        if (payload.storageKey) {
+          console.log("REMOVE STORAGE:", payload.storageKey);
+          console.log("REMOVE TIME:", Date.now());
+          chrome.storage.local.remove([payload.storageKey]);
+        }
       }
     }
   }, 500);
@@ -137,14 +150,26 @@ function cleanupUrl() {
 }
 
 function init() {
+  console.log("TARGET SCRIPT START");
+  console.log("Current URL:", window.location.href);
+  console.log("Current Host:", window.location.hostname);
+  
   const urlParams = new URLSearchParams(window.location.search);
   const portalId = urlParams.get("portal_id");
+  
+  console.log("RequestId:", portalId);
   
   if (!portalId) return;
 
   const storageKey = `portal_autologin_${portalId}`;
+  console.log("Storage Key:", storageKey);
 
   const handlePayload = (payload) => {
+    console.log("Loaded Payload:", payload);
+    console.log("Payload Username:", payload?.credentials?.username);
+    console.log("Payload Website:", payload?.website);
+    console.log("Payload Domain:", payload?.domain);
+    
     if (!payload) return;
 
     // Validate
