@@ -201,6 +201,58 @@ export default function ConnectList({ connections, siteConfigs = [] }: { connect
     showToast("Copied all credentials");
   };
 
+  const handleOpenAll = async () => {
+    if (connections.length === 0) {
+      showToast("No apps to open.");
+      return;
+    }
+
+    // Group connections by domain
+    const groups: { [domain: string]: any[] } = {};
+    for (const conn of connections) {
+      let domain = "";
+      try {
+        domain = new URL(conn.website).hostname;
+      } catch (e) {
+        domain = conn.website;
+      }
+      if (!groups[domain]) groups[domain] = [];
+      groups[domain].push(conn);
+    }
+
+    // Load current rotation state
+    const savedRotation = localStorage.getItem("portal_domain_rotation");
+    const rotationState = savedRotation ? JSON.parse(savedRotation) : {};
+
+    // For each domain, select the connection and open
+    for (const domain of Object.keys(groups)) {
+      const conns = groups[domain];
+      if (conns.length === 0) continue;
+
+      let currentIndex = rotationState[domain] || 0;
+      if (currentIndex >= conns.length) {
+        currentIndex = 0;
+      }
+
+      const selectedConn = conns[currentIndex];
+
+      // Open connection
+      await handleConnect(selectedConn);
+
+      // Increment rotation
+      rotationState[domain] = (currentIndex + 1) % conns.length;
+    }
+
+    // Save state back
+    localStorage.setItem("portal_domain_rotation", JSON.stringify(rotationState));
+    showToast("Opened all domains using rotation!");
+  };
+
+  const handleResetRotation = () => {
+    localStorage.removeItem("portal_domain_rotation");
+    showToast("Rotation reset to default.");
+  };
+
   return (
     <div>
       {/* Toast Notification */}
@@ -210,15 +262,29 @@ export default function ConnectList({ connections, siteConfigs = [] }: { connect
         </div>
       )}
 
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
         <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">Your Apps</h2>
-        <button 
-          onClick={handleOpenAdd}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
-        >
-          <Plus className="w-5 h-5" />
-          Add App
-        </button>
+        <div className="flex gap-2 flex-wrap justify-end">
+          <button 
+            onClick={handleResetRotation}
+            className="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 px-4 py-2 rounded-lg font-medium transition-colors"
+          >
+            Reset Rotation
+          </button>
+          <button 
+            onClick={handleOpenAll}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm"
+          >
+            Open All
+          </button>
+          <button 
+            onClick={handleOpenAdd}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
+          >
+            <Plus className="w-5 h-5" />
+            Add App
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
